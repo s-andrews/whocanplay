@@ -1,0 +1,10 @@
+# Log in to mongosh as root
+
+use whocanplay_database
+db.createUser(
+  {
+    user: "whocanplay",
+    pwd:  "apassword",
+    roles: [ { role: "readWrite", db: "whocanplay_database" }]
+  }
+)

@@ -1,0 +1,9 @@
+{
+    "_id": "automatically assigned",
+    "name": "Simon Andrews",
+    "email":"simon@proteo.me.uk",
+    "disabled": false,
+    "locked_at": "",
+    "failed_logins": [],
+    "sessioncode": "usedwhenloggingin"
+}

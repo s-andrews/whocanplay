@@ -1,0 +1,30 @@
+#footer {
+    color: black;
+    background-color: lightgray;
+    padding: 1em;
+    margin-top: 2em;
+}
+
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+
+h2 {
+    padding-top: 1em;
+}
+
+li.nav-item {
+    padding-right: 1em;
+}
+
+tr.foldersize {
+    display: none;
+}
+
+.alertsymbol {
+    cursor: help;
+}

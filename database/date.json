@@ -1,0 +1,24 @@
+{
+    "_id" : "ABC123",
+    "group_id" : "ABC123",
+    "date" : "2024-07-14",
+    "from":  "19:00",
+    "to" : "21:00",
+    "type" : "rehearsal / gig",
+    "venue": "wherever",
+    "details": "Free form text...",
+    "players" : [
+        {
+            "Alto1" : {
+                "player_id": "ABC123",
+                "answer": "Unknown, Yes, No, Maybe"
+            }
+        },
+        {
+            "Alto1" : {
+                "player_id": "ABC123",
+                "answer": "Unknown, Yes, No, Maybe"
+            }
+        }
+    ]
+}

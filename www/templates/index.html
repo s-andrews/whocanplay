@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block css %}
+<style>
+#maincontent {
+    display: none;
+}
+</style>
+
+{# Not strictly CSS but it's in the head so it works #}
+<meta http-equiv="refresh" content="30">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" class="text-center">
+  
+  <div class="alert alert-primary d-flex align-items-center alert-dismissible fade show" role="alert">
+    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Info:"><use xlink:href="#info-fill"/></svg>
+    <div>
+      Watch our cluster <a href="https://vimeo.com/user/132030108/folder/21518400" target="_videos">howto videos</a>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  </div>
+
+  {% for alert in alerts %}
+  <div class="alert alert-danger d-flex align-items-center" role="alert">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16" role="img" aria-label="Warning:">
+      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+    </svg>
+    <div>
+      {{ alert }}
+    </div>
+  </div>
+  {% endfor %}
+
+
+  <div class="row">
+  
+    <div class="col-md-6">
+      <canvas id="storagechart", style="width:100%"></canvas>
+    </div>
+
+    <div class="col-md-6">
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="cpuchart" style="width:100%"></canvas>
+        </div>
+
+        <div class="col-md-6">
+          <canvas id="memchart" style="width:100%"></canvas>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="interactivecpuchart" style="width:100%"></canvas>
+        </div>
+
+        <div class="col-md-6">
+          <canvas id="interactivememchart" style="width:100%"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row pt-5">
+    <h1 class="text-center">Current Jobs</h1>
+  </div>
+
+  <div class="row">
+
+    <table class="table">
+
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Running Jobs</th>
+          <th>Queued Jobs</th>
+          <th>Used CPUs</th>
+          <th>Used Memory</th>
+          <th>Queued CPUs</th>
+          <th>Queued Memory</th>
+        </tr>
+        <tbody>
+          {% for user in userjobs %}
+          <tr>
+            <td class="text-nowrap">{{ user["username"] }}</td>
+            <td class="text-nowrap">{{ user["running_jobs"] }}</td>
+            <td class="text-nowrap">{{ user["queued_jobs"] }}</td>
+            <td class="text-nowrap">{{ user["used_cpus"] }}</td>
+            <td class="text-nowrap">{{ user["used_memory"] }}GB</td>
+            <td class="text-nowrap">{{ user["queued_cpus"] }}</td>
+            <td class="text-nowrap">{{ user["queued_memory"] }}GB</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+
+      </thead>
+
+    </table>
+
+
+  </div>
+
+
+
+</div>
+
+{% endblock %}
+
+{% block modals %}
+    <div id="logindiv" class="modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title">Log In</h2>
+            <img class="float-end" src="{{ url_for('static', filename='images/capstone_logo_path.svg') }}" width="200px">
+          </div>
+          <div class="modal-body">
+              <label for="username">Username</label>
+              <input class="form-control" type="text" id="username">
+              <label for="Password">Password</label>
+              <input class="form-control" type="password" id="password">
+              <button id="login" type="button" class="form-control btn btn-primary mt-2">Log In</button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+
+<script>
+$( document ).ready(function() {
+
+    show_login()
+
+    // Action when they log in
+    $("#login").click(process_login)
+    $("#password").keypress(function(e){
+        if(e.keyCode == 13){
+            process_login();
+        }
+    });
+})
+
+
+</script>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+const storagedata = {
+  labels : ["used","free"],
+  datasets : [
+    {
+      label: "",
+      data:[{{ node_data["used_storage"] }},{{ node_data["total_storage"] - node_data["used_storage"] }}],
+      backgroundColor: [
+        "#00AAAA","#CCCCCC"
+      ]
+    }
+  ]
+};
+
+new Chart("storagechart", {
+  type: "doughnut",
+  data: storagedata,
+  options: {
+    devicePixelRatio: 4,
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: "Storage Usage",
+        font: {
+          size: 20
+        }
+      }
+    }
+  }
+});
+
+
+const cpudata = {
+  labels : ["used_cores","free_cores"],
+  datasets : [
+    {
+      label: "",
+      data:[{{ node_data["used_cpus"] }},{{ node_data["total_cpus"] - node_data["used_cpus"] }}],
+      backgroundColor: [
+        "#CC0000","#CCCCCC"
+      ]
+    }
+  ]
+};
+
+new Chart("cpuchart", {
+  type: "doughnut",
+  data: cpudata,
+  options: {
+    devicePixelRatio: 4,
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: "Batch CPU Usage",
+        font: {
+          size: 20
+        }
+      }
+    }
+  }
+});
+
+
+const interactivecpudata = {
+  labels : ["used_cores","free_cores"],
+  datasets : [
+    {
+      label: "",
+      data:[{{ node_data["interactive_used_cpus"] }},{{ node_data["interactive_total_cpus"] - node_data["interactive_used_cpus"] }}],
+      backgroundColor: [
+        "#0000CC","#CCCCCC"
+      ]
+    }
+  ]
+};
+
+new Chart("interactivecpuchart", {
+  type: "doughnut",
+  data: interactivecpudata,
+  options: {
+    devicePixelRatio: 4,
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: "Interactive CPU Usage",
+        font: {
+          size: 20
+        }
+      }
+    }
+  }
+});
+
+
+
+const memdata = {
+  labels : ["used_memory_gb","free_memory_gb"],
+  datasets : [
+    {
+      label: "",
+      data:[{{ node_data["used_memory"] }},{{ node_data["total_memory"] - node_data["used_memory"] }}],
+      backgroundColor: [
+        "#CC0000","#CCCCCC"
+      ]
+    }
+  ]
+};
+
+new Chart("memchart", {
+  type: "doughnut",
+  data: memdata,
+  options: {
+    devicePixelRatio: 4,
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: "Batch Memory Usage",
+        font: {
+          size: 20
+        }
+      }
+    }
+  }
+});
+
+const interactivememdata = {
+  labels : ["used_memory_gb","free_memory_gb"],
+  datasets : [
+    {
+      label: "",
+      data:[{{ node_data["interactive_used_memory"] }},{{ node_data["interactive_total_memory"] - node_data["interactive_used_memory"] }}],
+      backgroundColor: [
+        "#0000CC","#CCCCCC"
+      ]
+    }
+  ]
+};
+
+new Chart("interactivememchart", {
+  type: "doughnut",
+  data: interactivememdata,
+  options: {
+    devicePixelRatio: 4,
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: "Interactive Memory Usage",
+        font: {
+          size: 20
+        }
+      }
+    }
+  }
+});
+
+
+
+</script>
+
+{% endblock %}
